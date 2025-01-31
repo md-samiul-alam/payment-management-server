@@ -83,3 +83,36 @@ async def create_payee(payee: PayeeInfo):
             )
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.put("/payees/{payee_id}", response_model=PayeeInfo)
+async def update_payee(payee_id: str, payee: PayeeInfo):
+    try:
+        if not ObjectId.is_valid(payee_id):
+            raise HTTPException(status_code=400, detail="Invalid payee ID format")
+            
+        payee_dict = payee.model_dump()
+
+        payee_dict.pop('id', None)
+        payee_dict.pop('payee_added_date_utc', None)
+        
+        result = db.payee_collection.update_one(
+            {"_id": ObjectId(payee_id)},
+            {"$set": payee_dict}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Payee not found")
+            
+        updated_payee = db.payee_collection.find_one({"_id": ObjectId(payee_id)})
+        updated_payee["id"] = str(updated_payee["_id"])
+        
+        return updated_payee
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        if "duplicate key error" in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail="A payee with this email already exists"
+            )
+        raise HTTPException(status_code=500, detail=str(e))
+
