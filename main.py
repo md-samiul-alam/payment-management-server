@@ -3,6 +3,7 @@ import config.database as db
 import random
 from models.payee import PayeeInfo
 from typing import List
+from bson import ObjectId
 
 app = FastAPI()
 
@@ -39,6 +40,26 @@ async def get_payees():
             payee["id"] = str(payee["_id"])
             
         return payees
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/payees/{payee_id}", response_model=PayeeInfo)
+async def get_payee_by_id(payee_id: str):
+    try:
+        if not ObjectId.is_valid(payee_id):
+            raise HTTPException(status_code=400, detail="Invalid payee ID format")
+            
+        payee = db.payee_collection.find_one({"_id": ObjectId(payee_id)})
+        
+        if not payee:
+            raise HTTPException(status_code=404, detail="Payee not found")
+            
+        payee["id"] = str(payee["_id"])
+        
+        return payee
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
