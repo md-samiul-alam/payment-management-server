@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 class PayeeInfo(BaseModel):
+    id: Optional[str] = None
     payee_first_name: str
     payee_last_name: str
     payee_added_date_utc: datetime = Field(default_factory=datetime.utcnow)

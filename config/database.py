@@ -51,10 +51,10 @@ try:
                     'payee_last_name': {'bsonType': 'string'},
                     'payee_added_date_utc': {'bsonType': 'date'},
                     'payee_address_line_1': {'bsonType': 'string'},
-                    'payee_address_line_2': {'bsonType': 'string'},
+                    'payee_address_line_2': {'bsonType': ['string', 'null']},
                     'payee_city': {'bsonType': 'string'},
                     'payee_country': {'bsonType': 'string', 'pattern': '^[A-Z]{2}$'},
-                    'payee_province_or_state': {'bsonType': 'string'},
+                    'payee_province_or_state': {'bsonType': ['string', 'null']},
                     'payee_postal_code': {'bsonType': 'string'},
                     'payee_phone_number': {'bsonType': 'string', 'pattern': '^\+[1-9]\d{1,14}$'},
                     'payee_email': {'bsonType': 'string', 'pattern': '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'}
