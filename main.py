@@ -2,10 +2,18 @@ import datetime
 from fastapi import FastAPI, HTTPException
 import config.database as db
 from config.database import payment_info
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,  # If you need to send cookies or use authentication
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.get("/")
 async def read_root():
@@ -31,7 +39,7 @@ async def get_payments(limit: int = 10, skip: int = 0):
                 payment["payee_payment_status"] =  "DUE"
 
             total_due_before_tax =  payment["due_amount"] -  payment["due_amount"] * (payment["discount_percent"]/100.0); 
-            payment["totdal_due"] = total_due_before_tax +  total_due_before_tax * (payment["tax_percent"]/100.0);
+            payment["total_due"] = total_due_before_tax +  total_due_before_tax * (payment["tax_percent"]/100.0);
             
                             
         return payments
