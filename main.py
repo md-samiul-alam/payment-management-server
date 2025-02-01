@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 import config.database as db
 from config.database import payment_info
 from fastapi.middleware.cors import CORSMiddleware
+from bson.objectid import ObjectId
 
 
 app = FastAPI()
@@ -48,3 +49,30 @@ async def get_payments(limit: int = 10, skip: int = 0):
         print(f"Error fetching payment info: {e}")
         raise HTTPException(status_code=500, detail=f"{e}")
 
+
+@app.get("/payment/{id}")
+async def get_payment_by_id(id: str):
+    try:
+        print(id)
+        payment = payment_info.find_one({"_id": ObjectId(id)})
+
+        payment["_id"] = str(payment["_id"])
+
+        payment_date = payment["payee_due_date"].date()
+        today_date = datetime.date.today()
+        
+        if(payment_date == today_date):
+            payment["payee_payment_status"] =  "DUE NOW"
+        elif(payment_date < today_date):
+            payment["payee_payment_status"] =  "OVER DUE"
+        else:
+            payment["payee_payment_status"] =  "DUE"
+
+        total_due_before_tax =  payment["due_amount"] -  payment["due_amount"] * (payment["discount_percent"]/100.0); 
+        payment["total_due"] = total_due_before_tax +  total_due_before_tax * (payment["tax_percent"]/100.0);
+                            
+        return payment
+
+    except Exception as e:
+        print(f"Error fetching payment info: {e}")
+        raise HTTPException(status_code=500, detail=f"{e}")
