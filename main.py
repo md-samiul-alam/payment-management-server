@@ -79,3 +79,18 @@ async def get_payment_by_id(id: str):
     except Exception as e:
         print(f"Error fetching payment info: {e}")
         raise HTTPException(status_code=500, detail=f"{e}")
+
+@app.delete("/payment/{id}")
+async def delete_payment_by_id(id: str):
+    try:
+        result = payment_info.delete_one({"_id": ObjectId(id)})
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Item not found")
+        return {
+            "message": "Record deleted successfully",
+            "status": 200,
+        }
+    except Exception as e:
+        print(f"Error deleting payment info: {e}")
+        raise HTTPException(status_code=500, detail=f"{e}")
