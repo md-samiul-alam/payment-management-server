@@ -25,6 +25,7 @@ async def read_root():
 async def get_payments(limit: int = 10, skip: int = 0):
     try:
         payments = list(payment_info.find({}, limit=limit, skip=skip))
+        count = payment_info.count_documents({})
 
         for payment in payments:
             payment["_id"] = str(payment["_id"])
@@ -43,7 +44,10 @@ async def get_payments(limit: int = 10, skip: int = 0):
             payment["total_due"] = total_due_before_tax +  total_due_before_tax * (payment["tax_percent"]/100.0);
             
                             
-        return payments
+        return {
+            "payments": payments,
+            "count": count,
+        }
 
     except Exception as e:
         print(f"Error fetching payment info: {e}")
@@ -53,7 +57,6 @@ async def get_payments(limit: int = 10, skip: int = 0):
 @app.get("/payment/{id}")
 async def get_payment_by_id(id: str):
     try:
-        print(id)
         payment = payment_info.find_one({"_id": ObjectId(id)})
 
         payment["_id"] = str(payment["_id"])
