@@ -1,5 +1,6 @@
 import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+import urllib
 import config.database as db
 from config.database import payment_info
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,10 +23,45 @@ async def read_root():
 
 
 @app.get("/payment")
-async def get_payments(limit: int = 10, skip: int = 0):
+async def get_payments(request: Request):
+    params = request.query_params
+    
+    limit = int(params.get("limit"))
+    skip = int(params.get("skip"))
+
+    filter_criteria = {}
+    params.get("payee_first_name")
+    if(params.get("payee_first_name") != None and params.get("payee_first_name") != ""):
+        first_name = urllib.parse.unquote(params.get("payee_first_name"))
+        filter_criteria["payee_first_name"] = {
+            "$regex": first_name,
+            "$options": "i"
+        }
+    if(params.get("payee_last_name") != None and params.get("payee_last_name") != ""):
+        last_name = urllib.parse.unquote(params.get("payee_last_name"))
+        filter_criteria["payee_last_name"] = {
+            "$regex": last_name,
+            "$options": "i"
+        }
+    if(params.get("payee_due_date_e") != None and params.get("payee_due_date_e") != ""):
+        due_date_e = urllib.parse.unquote(params.get("payee_due_date_e"))
+        due_date_e = datetime.datetime.fromisoformat(due_date_e.replace('Z', '+00:00'))
+        filter_criteria["payee_due_date"] = {
+            "$lte": due_date_e
+        }
+    if(params.get("payee_due_date_s") != None and params.get("payee_due_date_s") != ""):
+        due_date_s = urllib.parse.unquote(params.get("payee_due_date_s"))
+        due_date_s = datetime.datetime.fromisoformat(due_date_s.replace('Z', '+00:00'))
+        if("payee_due_date" in filter_criteria):
+            filter_criteria["payee_due_date"]["$gte"] = due_date_s
+        else:
+            filter_criteria["payee_due_date"] = {
+                "$gte": due_date_s
+            }
+
     try:
-        payments = list(payment_info.find({}, limit=limit, skip=skip))
-        count = payment_info.count_documents({})
+        payments = list(payment_info.find(filter_criteria, limit=limit, skip=skip))
+        count = payment_info.count_documents(filter_criteria)
 
         for payment in payments:
             payment["_id"] = str(payment["_id"])
