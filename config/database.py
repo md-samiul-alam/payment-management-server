@@ -12,6 +12,7 @@ connection = os.getenv('CONNECTION_STRING')
 uri = f"mongodb+srv://{username}:{password}@{connection}"
 
 try:
+    print(uri)
     client = MongoClient(uri)
     db = client['adcore_db']
     payment_info = db['payment_info']
